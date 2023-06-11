@@ -1,6 +1,7 @@
 package com.sanjesh.springckafka;
 
 import com.github.javafaker.Faker;
+import io.confluent.developer.avro.Hobbit;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -41,7 +42,7 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 @SpringBootApplication
-@EnableKafkaStreams
+//@EnableKafkaStreams
 public class SpringCkafkaApplication {
 
   public static void main(String[] args) {
@@ -49,14 +50,9 @@ public class SpringCkafkaApplication {
   }
 
   @Bean
-  NewTopic hobbit2() {
-    return TopicBuilder.name("hobbit2").partitions(8).replicas(5).build();
-  }
-
-  @Bean
-  NewTopic wordCount() {
-    return TopicBuilder.name("streams-wordcount-output")
-        .partitions(2)
+  NewTopic hobbitAvro(){
+    return TopicBuilder.name("hobbit-avro")
+        .partitions(4)
         .replicas(3)
         .build();
   }
@@ -82,8 +78,10 @@ class Producer {
     final Flux<Long> interval = Flux.interval(Duration.ofMillis(1_1000));
     final Flux<String> quote = Flux.fromStream(Stream.generate(() -> faker.hobbit().quote()));
 
-    Flux.zip(interval, quote).map((Function<Tuple2<Long, String>, Object>) it -> template.send(
-        "hobbit", faker.random().nextInt(42), it.getT2())).blockLast();
+    Flux.zip(interval, quote)
+        .map(it -> template.send("hobbit-avro", faker.random().
+                nextInt(42), it.getT2()))
+        .blockLast();
   }
 }
 
@@ -92,18 +90,18 @@ class Producer {
 class Consumer {
 
 
-  @KafkaListener(topics = {"streams-wordcount-output"}, groupId = "spring-boot-kafka")
-  public void consume(ConsumerRecord<String, Long> quote) {
+  @KafkaListener(topics = {"hobbit-avro"}, groupId = "spring-boot-kafka")
+  public void consume(ConsumerRecord<Integer, Hobbit> quote) {
     System.out.println("received: key:" + quote.key() + " value: " + quote.value());
   }
 }
 
 
-@RequiredArgsConstructor
-@Component
+//@RequiredArgsConstructor
+//@Component
 class Processor {
 
-  @Autowired
+  //@Autowired
   public void process(StreamsBuilder builder) {
 
     final Serde<Integer> integerSerde = Serdes.Integer();
@@ -126,12 +124,12 @@ class Processor {
 
 
 @RequiredArgsConstructor
-@RestController
+//@RestController
 class RestService {
 
   private final StreamsBuilderFactoryBean factoryBean;
 
-  @GetMapping("/count/{word}")
+  //@GetMapping("/count/{word}")
   public Long getCount(@PathVariable String word){
 
     System.out.println("In get count for word: " + word);

@@ -2,6 +2,8 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.1.0'
 	id 'io.spring.dependency-management' version '1.1.0'
+	id 'idea'
+	id "com.github.davidmc24.gradle.plugin.avro" version "1.7.1"
 }
 
 group = 'com.sanjesh'
@@ -16,6 +18,10 @@ configurations {
 
 repositories {
 	mavenCentral()
+	gradlePluginPortal()
+	maven {
+		url "https://packages.confluent.io/maven"
+	}
 }
 
 ext {
@@ -30,6 +36,7 @@ dependencies {
 	implementation 'org.springframework.cloud:spring-cloud-stream-binder-kafka-streams'
 	implementation 'org.springframework.kafka:spring-kafka'
 	implementation 'com.github.javafaker:javafaker:1.0.2'
+	implementation "io.confluent:kafka-avro-serializer:7.4.0"
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
